@@ -42,9 +42,46 @@ async function searchIssues(jql) {
 }
 
 async function updateIssue(issue, fieldName, fieldValue) {
-    return await jira.updateIssue(issue.id, {
-        fields: {
-            [fieldName]: fieldValue
+    // FixVersion is an Object, not a simple string
+    if (fieldName === "fixVersions") {
+        // from e.g. TEST-1 get the project key --> TEST
+        const projectKey = getProjectKey(issue.key);
+        const projectId = await getProjectId(projectKey);
+        const version = await getVersion(projectId, fieldValue);
+        return await addVersion(issue, version.id);
+    } else {
+        return await jira.updateIssue(issue.id, {
+            fields: {
+                [fieldName]: fieldValue
+            }
+        });
+    }
+}
+
+async function getVersion(projectId, versionName) {
+    const versions = await jira.getVersions(projectId);
+    for (let i = 0; i < versions.length; i++) {
+        const version = versions[i];
+        if (version.name === versionName) {
+            return version;
+        }
+    }
+    return undefined;
+}
+
+async function addVersion(issue, versionId) {
+    await jira.updateIssue(issue.id, {
+        update: {
+            fixVersions: [{"add": {id: versionId}}]
         }
     });
+}
+
+async function getProjectId(projectKey) {
+    const project = await jira.getProject(projectKey);
+    return project.id
+}
+
+function getProjectKey(issueKey) {
+    return issueKey.substring(0, issueKey.indexOf("-"));
 }
