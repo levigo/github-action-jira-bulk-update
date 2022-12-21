@@ -10,6 +10,7 @@ The action will set the given field in Jira to the given value.
 - `jql`: The JQL query to identify the issues to update
 - `fieldName`: The name of the field to update (careful with custom fields)
 - `fieldValue`: The value to set the field to
+- `appendValue`: set to `true` if you want to append the value and not replace it
 
 ## Outputs
 None

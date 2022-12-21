@@ -1,7 +1,7 @@
 const core = require("@actions/core");
 const JiraApi = require("jira-client")
 
-let jira, domain, username, password, jql, fieldName, fieldValue;
+let jira, domain, username, password, jql, fieldName, fieldValue, appendValue;
 (async () => {
     try {
         domain = core.getInput("domain");
@@ -10,6 +10,7 @@ let jira, domain, username, password, jql, fieldName, fieldValue;
         jql = core.getInput("jql");
         fieldValue = core.getInput("fieldValue");
         fieldName = core.getInput("fieldName");
+        appendValue = core.getInput("appendValue") === "true" || core.getInput("appendValue") === true;
 
         if (!jql || !fieldName || !fieldValue) {
             core.setFailed(`Please provide jql, fieldName and fieldValue`);
@@ -23,17 +24,17 @@ let jira, domain, username, password, jql, fieldName, fieldValue;
             username: username,
             password: password,
         });
-        searchAndUpdate(jql, fieldName, fieldValue)
+        searchAndUpdate(jql, fieldName, fieldValue, appendValue)
     } catch (error) {
         core.setFailed(error.message);
     }
 })();
 
-async function searchAndUpdate(jql, fieldName, fieldValue) {
+async function searchAndUpdate(jql, fieldName, fieldValue, appendValue) {
     const issues = await searchIssues(jql);
     for (let i = 0; i < issues.issues.length; i++) {
         const issue = issues.issues[i];
-        updateIssue(issue, fieldName, fieldValue);
+        updateIssue(issue, fieldName, fieldValue, appendValue);
     }
 }
 
@@ -41,7 +42,7 @@ async function searchIssues(jql) {
     return await jira.searchJira(jql);
 }
 
-async function updateIssue(issue, fieldName, fieldValue) {
+async function updateIssue(issue, fieldName, fieldValue, appendValue) {
     // FixVersion is an Object, not a simple string
     if (fieldName === "fixVersions") {
         // from e.g. TEST-1 get the project key --> TEST
@@ -50,6 +51,12 @@ async function updateIssue(issue, fieldName, fieldValue) {
         const version = await getVersion(projectId, fieldValue);
         return await addVersion(issue, version.id);
     } else {
+        if (appendValue) {
+            const oldValue = issue["fields"][fieldName];
+            if (!!oldValue) {
+                fieldValue = oldValue + ", " + fieldValue;
+            }
+        }
         return await jira.updateIssue(issue.id, {
             fields: {
                 [fieldName]: fieldValue
@@ -85,3 +92,5 @@ async function getProjectId(projectKey) {
 function getProjectKey(issueKey) {
     return issueKey.substring(0, issueKey.indexOf("-"));
 }
+
+module.exports = searchAndUpdate;
