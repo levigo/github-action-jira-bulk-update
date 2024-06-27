@@ -23,6 +23,9 @@ inputs:
   fieldValue:
     description: 'The value to set the field to'
     required: true
+  appendValue:
+    description: 'Whether to append or not'
+    required: false
 runs:
   using: 'node20'
   main: 'index.js'
