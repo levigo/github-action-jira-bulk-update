@@ -30,4 +30,4 @@ with:
 
 ## Limitations
 
-- Currently no complex fields are supported (e.g. "fixVersion")
+- Currently no complex fields are supported (except "fixVersion")
