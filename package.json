@@ -4,7 +4,7 @@
   "description": "Action to update a specified field for all found Jira issues",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "ncc build index.js -o dist --license licenses.txt"
   },
   "repository": {
     "type": "git",
@@ -23,6 +23,7 @@
     "@actions/http-client": "^2.2.3"
   },
   "devDependencies": {
-    "@types/node": "^24.12.4"
+    "@types/node": "^24.12.4",
+    "@vercel/ncc": "^0.38.4"
   }
 }
